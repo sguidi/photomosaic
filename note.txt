@@ -1,0 +1,13 @@
+Image not resizable means last column/row may be of smaller size than the tile
+    a - Render for them a normal size svg tile => mosaic image will not respect the original size
+    b - css resize the svg tile, those tiles will look smallers but original size is respected
+
+Tech solution:
+    tiles worker will accept the image as buffer, see Worker Transferable Objects
+        returned tiles matching HEX , singles (terminator) or row block
+
+    fetcher worker will retrieve the svg from the server based on hex
+        caching result SVG to skip calls of matching hex
+        append SVGs node as single DOM write per row (or smaller DOM injection keeping the row hidden until completed)
+        
+    
