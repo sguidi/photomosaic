@@ -11,16 +11,53 @@
     var status;
 
     function imageToMosaic(file) {
-        Utils.readImageFile(file).then(function(arrayBuffer){
-            transform(arrayBuffer);
-        }).catch(function(e){
+        setStatus(STATUS_PROCESSING);
+        Utils.loadImage(file).then( function (image) {
+            transform(image);
+        }).catch(function (e) {
             setStatus(STATUS_ERROR);
         });
     }
 
-    // Transfor the image buffer to mosaic
-    function transform(arrayBuffer) {
-        console.log('transform image', arrayBuffer.byteLength);
+    // Transfor the image to mosaic
+    function transform(image) {
+        // Slice in tiles with computed hex color code
+        var slicePromise = MosaicBuilder.slice(image, TILE_WIDTH, TILE_HEIGHT);
+        slicePromise.then(function(slices) {
+            console.log(slices);
+        });
+
+        
+/*
+        // Load color based tiles
+        var start = performance.now();
+        
+        var tiles = {};
+        slices.forEach(function(s){
+            if(!tiles[s.hex]) {
+                tiles[s.hex] = null;
+            }
+        });
+        var hexes = Object.keys(tiles);
+        var promise = new Promise(function(resolve, reject) {
+            var total = hexes.length;
+            Object.keys(tiles).forEach( function(h) {
+                var tileImg = new Image();
+                tileImg.onload = function(e) {
+                    tiles[h] = e.target;
+                    total --;
+                    if(total == 0){
+                        resolve();
+                    }
+                };
+                tileImg.src = 'color/' + h;
+            });
+        });
+        promise.then( function () {
+            console.log(hexes.length, 'hexes loaded in',
+            (performance.now() - start).toFixed(0),
+            'loaded %', (hexes.length/slices.length*100).toFixed(2) );
+        });*/
     }
 
     // Update application status and application behave
@@ -51,7 +88,7 @@
 
         // drag & drop handler
         var dropZoneEl = document.getElementById('drop-zone');
-        
+
         dropZoneEl.addEventListener('dragover', function (e) {
             e.preventDefault();
             if (status != STATUS_INITIAL) {
