@@ -12,7 +12,7 @@
 
     function imageToMosaic(file) {
         setStatus(STATUS_PROCESSING);
-        Utils.loadImage(file).then( function (image) {
+        Utils.loadImage(file).then(function (image) {
             transform(image);
         }).catch(function (e) {
             setStatus(STATUS_ERROR);
@@ -21,43 +21,38 @@
 
     // Transfor the image to mosaic
     function transform(image) {
-        // Slice in tiles with computed hex color code
-        var slicePromise = MosaicBuilder.slice(image, TILE_WIDTH, TILE_HEIGHT);
-        slicePromise.then(function(slices) {
-            console.log(slices);
-        });
-
-        
-/*
-        // Load color based tiles
         var start = performance.now();
-        
-        var tiles = {};
-        slices.forEach(function(s){
-            if(!tiles[s.hex]) {
-                tiles[s.hex] = null;
-            }
-        });
-        var hexes = Object.keys(tiles);
-        var promise = new Promise(function(resolve, reject) {
-            var total = hexes.length;
-            Object.keys(tiles).forEach( function(h) {
-                var tileImg = new Image();
-                tileImg.onload = function(e) {
-                    tiles[h] = e.target;
-                    total --;
-                    if(total == 0){
-                        resolve();
+
+        //Create canvas result and append it to the DOM
+        var canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        var context = canvas.getContext('2d');
+        document.getElementById('mosaic').appendChild(canvas);
+
+        // Transform the image and append orderd rows as soon as they're ready
+        var buildRowsPromise = MosaicBuilder.transformRowByRow(image, TILE_WIDTH, TILE_HEIGHT,
+            function (row) {
+                // canvas.height = row[0].height * (row[0].r + 1);
+                row.forEach(function (cell) {
+                    // var tile = new Image();
+                    // tile.src = cell.tile;
+                    if (cell.tile.complete) {
+                        // document.getElementById('mosaic').appendChild(cell.tile);
+                        context.drawImage(cell.tile, cell.x, cell.y, cell.width, cell.height);
                     }
-                };
-                tileImg.src = 'color/' + h;
-            });
+                });
+                //
+            }
+        );
+
+        buildRowsPromise.then(function () {
+            console.log('mosaic completed in', ((performance.now() - start) / 1000).toFixed(3), 'sec');
+            setStatus(STATUS_INITIAL);
+        }).catch(function (err) {
+            // catch any error that happened along the way
+            setStatus(STATUS_ERROR);
         });
-        promise.then( function () {
-            console.log(hexes.length, 'hexes loaded in',
-            (performance.now() - start).toFixed(0),
-            'loaded %', (hexes.length/slices.length*100).toFixed(2) );
-        });*/
     }
 
     // Update application status and application behave
@@ -75,7 +70,6 @@
             setStatus(STATUS_INCOMPATIBLE);
             return;
         }
-
         // Avoid drag by mistake outside the drop-zone
         window.addEventListener("dragover", function (e) {
             e = e || event;

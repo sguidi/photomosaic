@@ -85,11 +85,34 @@ var Utils = (function () {
         return slices;
     }
 
+    function loadTile(hex) {
+        return new Promise(function (resolve, reject) {
+            var tileImg = new Image();
+            tileImg.onload = function (e) {
+                resolve(e.target);
+            };
+            tileImg.src = 'color/' + hex;
+        });
+    }
+
+    function loadTileAjax(hex) {
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/color/" + hex);
+            xhr.onload = function () {
+                resolve(xhr.responseText);
+            };
+            xhr.send();
+        });
+    }
+
     return {
         isCanvasSupported: isCanvasSupported,
         loadImage: loadImage,
         imageHex: imageHex,
-        sliceImage: sliceImage
+        sliceImage: sliceImage,
+        loadTile: loadTile,
+        loadTileAjax: loadTileAjax
     };
 
 })();
