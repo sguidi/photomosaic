@@ -114,23 +114,13 @@ var Utils = (function () {
         return hex;
     }
 
-    
-    function loadTile(hex) {
-        return new Promise(function (resolve, reject) {
-            var tileImg = new Image();
-            tileImg.onload = function (e) {
-                resolve(e.target);
-            };
-            tileImg.src = 'color/' + hex;
-        });
-    }
 
     /**
      * Async load of a tile content from server url 'color/<hex>'
      * @param {string} hex - the hex color in 6-digits format
      * @return {Promise} - Resolve into the loaded content
      */
-    function loadTileAjax(hex) {
+    function loadTile(hex) {
         return new Promise(function (resolve, reject) {
             var xhr = new XMLHttpRequest();
             xhr.open("GET", "/color/" + hex);
@@ -157,7 +147,7 @@ var Utils = (function () {
         loadImage: loadImage,
         sliceImage: sliceImage,
         imageAverageHex: imageAverageHex,
-        loadTileAjax: loadTileAjax,
+        loadTile: loadTile,
         getImageFromSVG: getImageFromSVG
     };
 

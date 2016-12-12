@@ -10,8 +10,7 @@ this.onmessage = function (event) {
 	var loads = [];
 
 	cells.forEach(function (c) {
-		c.hex = Utils.imageAverageHex(c.data);
-		loads.push(Utils.loadTileAjax(c.hex));
+		loads.push(Utils.loadTile(Utils.imageAverageHex(c.data)));
 	});
 	
 	Promise.all(loads).then(function(tiles){

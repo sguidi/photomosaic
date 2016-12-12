@@ -55,7 +55,7 @@ var MosaicBuilder = (function () {
      */
     function MosaicBuilder() {
 
-        var pool = new WorkerPool.Pool('js/worker.js', WORKERS_POOL_SIZE);
+        var pool = new ThreadPool.Pool('js/worker.js', WORKERS_POOL_SIZE);
 
         var running = false;
 

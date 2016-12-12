@@ -2,7 +2,7 @@
  * Manage a size limited pool of Web workers
  * Allow for queue of tasks
  */
-var WorkerPool = (function () {
+var ThreadPool = (function () {
 
     /**
      * Create the pool of workers
@@ -91,5 +91,5 @@ var WorkerPool = (function () {
 
 var exports = exports || null;
 if (exports) {
-    exports.WorkerPool = WorkerPool;
+    exports.ThreadPool = ThreadPool;
 }
