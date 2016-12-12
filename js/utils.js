@@ -134,12 +134,17 @@ var Utils = (function () {
     /**
      * Create an Image from an SVG in text format
      * @param {string} svgText - the svg content
-     * @returns {Image} image build using the input svg content
+     * @returns {Promise} resolve with loaded image based on the input svg content
      */
     function getImageFromSVG(svgText) {
-        var result = new Image();
-        result.src = 'data:image/svg+xml;base64,'+window.btoa(svgText);
-        return result;
+        return new Promise(function(resolve, reject){
+            var image = new Image();
+            image.onload = function (e) {
+                // document.getElementById('mosaic').appendChild(image);
+                resolve(e.target);
+            };
+            image.src = 'data:image/svg+xml;base64,'+window.btoa(svgText);
+        });
     }
 
     return {

@@ -55,7 +55,7 @@ Feature improvements:
                 * Computation progress feedback
                 * Keep of the successfull transformed images (results)
                 * Results organized as gallery of smaller preview images with actions (zoom, delete, export ecc)
-            The delivered status of the UI compromise completeness with a good enough to be usable due to no specific requirements in the assignment and the suggested time to complete the task.
+            The delivered status of the UI compromise between completeness and 'good enough to be used' due to no specific requirements in the assignment and the suggested time to complete the task.
 
          
         Performace:
@@ -74,9 +74,7 @@ Feature improvements:
                 The worker are used to compute the slices images data into svg content based on hex
                 Data transfer between worker and parent context is default as copy object.
                 Image sent to the worker and svg content sent back increase the network traffic.
-                This point can be improved using Transferable Objects.  
+                This point can be improved using Transferable Objects.
 
 
 Open issues:
-    Make row render atomic
-        Cell tiles are added one by one to the main canvas, this result in row rendered cell by cell against the assignment specification

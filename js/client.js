@@ -39,29 +39,28 @@
         var resultContainer = document.getElementById('mosaic');
 
         /* Create the canvas mosaic container and append it to the DOM
+        * The canvas size match the sliced image per tile without the oddment
         * The canvas need to be in the DOM from the start to show user the render progress row by row 
         */
         var canvas = document.createElement('canvas');
-        canvas.width = image.width;
-        canvas.height = image.height;
+        canvas.width = Math.floor(image.width / TILE_WIDTH) * TILE_WIDTH;
+        canvas.height = Math.floor(image.height / TILE_HEIGHT) * TILE_HEIGHT;
         var context = canvas.getContext('2d');
         resultContainer.appendChild(canvas);
 
         // Transform the image row by row and render each one into the canvas as soon as it's ready
+        var r = 0;
         var buildRowsPromise = MosaicBuilder.transformRowByRow(image, TILE_WIDTH, TILE_HEIGHT,
-            function (row) {
-                // Append the transformed row to the canvas
-                row.forEach(function (cell) {
-                    var tileImage = Utils.getImageFromSVG(cell.tile);
-                    context.drawImage(tileImage, cell.x, cell.y, cell.width, cell.height);
-                });
+            function (mosaicRowImage) {
+                context.drawImage(mosaicRowImage, 0, r * TILE_HEIGHT, image.width, TILE_HEIGHT);
+                r++;
             }
         );
         
         // Render completed, log execution time and update status
         buildRowsPromise.then(function () {
-            console.log('mosaic completed in', ((performance.now() - start) / 1000).toFixed(3), 'sec');
-            setStatus(STATUS_INITIAL);
+            var executionTime = ((performance.now() - start) / 1000).toFixed(3);
+            setStatus(STATUS_INITIAL, 'Completed in ' + executionTime);
         }).catch(function (e) {
             // Set status to error
             setStatus(STATUS_ERROR, e);
@@ -91,16 +90,16 @@
     /**
      * Update application status and change UI actions accordingly
      * @param {string} value - The next status
-     * @param {object} errorDetails - Details for STATUS_ERROR
+     * @param {object} details - Additional details about the status change
      */
-    function setStatus(value, errorDetails) {
+    function setStatus(value, details) {
         // Set and show the new status
         status = value;
-        if(status === STATUS_ERROR) {
-            document.querySelector('#status .error .details').innerHTML  = errorDetails ? String(errorDetails) : '';
-        }
         document.querySelector('#status').className = status;
-        
+        // Hide/Show details
+        var detailsEl = document.querySelector('#status .details');
+        detailsEl.style.display = details ? 'block' : 'none';
+        detailsEl.innerHTML  = details ? String(details) : '';
         // Enable/Disable file input accordingly to current status
         document.getElementById('file-input').disabled = STATUS_PROCESSING == status;
     }

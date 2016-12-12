@@ -32,7 +32,7 @@ var MosaicBuilder = (function () {
             // Internal class to build the mosaic
             builder = new MosaicBuilder();
             // Configure the promise
-            return builder.compute(slices, callback, function(){
+            return builder.compute(slices, callback, function () {
                 // delete the builder on work done
                 builder = null;
             });
@@ -43,7 +43,7 @@ var MosaicBuilder = (function () {
      * Interrupt in progress transformation
     */
     function cancel() {
-        if(builder) {
+        if (builder) {
             // Stop current transformation
             builder.cancel();
             builder = null;
@@ -81,7 +81,7 @@ var MosaicBuilder = (function () {
                     // Wait for everything in the sequence so far
                     return rowPromise;
                 }).then(function (row) {
-                    if(!running) {
+                    if (!running) {
                         throw 'Render interrupted!';
                     }
                     // Increment internal counter to keep track of progress
@@ -107,13 +107,35 @@ var MosaicBuilder = (function () {
 
         /** Async compute cells tiles
          * @param {Array} cells - image cells
-         * @param {Promise} - To react to the async process success/failure
+         * @param {Promise} - Resolve with transformed row canvas
          */
         function computeRow(cells) {
             return new Promise(function (resolve, reject) {
-                // Run the cells compute via the pool
+                // Guard for empty row
+                var rowCanvas = document.createElement('canvas');
+                if (!cells.length) {
+                    rowCanvas.width = 0;
+                    rowCanvas.height = 0;
+                    resolve(rowCanvas);
+                }
+                // Run the cells compute via the pool                
                 pool.run(cells, function (e) {
-                    resolve(e.data);
+                    // Build a canvas containing all cells tiles
+                    var results = e.data;
+                    var w = results[0].width;
+                    var h = results[0].height;
+                    rowCanvas.width = results.length * w;
+                    rowCanvas.height = h;
+                    var context = rowCanvas.getContext('2d');
+
+                    Promise.all(results.map(function (c) { return Utils.getImageFromSVG(c.tile); })).then(
+                        function (images) {
+                            images.forEach(function (img, i) {
+                                context.drawImage(img, i * w, 0, w, h);
+                            });
+                            resolve(rowCanvas);
+                        }
+                    )
                 });
             });
         }
