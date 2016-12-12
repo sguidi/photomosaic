@@ -93,7 +93,7 @@ var Utils = (function () {
      */
     function imageAverageHex(image) {
         var length = image.data.length,
-            blockSize = 5, // only visit every 5 pixels
+            blockSize = 8, // only visit every 5 pixels
             i = -4,
             length,
             rgb = { r: 0, g: 0, b: 0 },
