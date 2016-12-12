@@ -62,13 +62,12 @@ Feature improvements:
             Tiles request to server:
                 On medium to big images an average of 10-30% of hex color are repeated
                 Browser cache avoid requests of the same tile to hit the server so that's not a big issue.
-                It can be worth verify if an application internal cache (a dictionary based on retrieved hex color) is better than leave to the browser the task
+                It can be worth verify if an application internal cache (a dictionary of retrieved hex color svgs) is better than leave to the browser the task
 
             Canvas draw:
                 Draw each tile into an Canvas already attached to the DOM is an heavy operation but as per requirement the canvas need to be refreshed on each row render completition.
-                It may improve the performance create ahead a single in memory image per row and append it in an atomic operation to the final canvas.
-                I think is worth it to spend some time to find other/better solutions:
-                    ImageBitmap
+                To improve performance and respect strictly the assignment the mosaic builder first render each row tiles into an in memory canvas and append the whole row as an atomic operation to the final canvas.
+                On render topic there is room for improvment, I did't deep into deeper.
 
             Worker postMessage data transfer:
                 The worker are used to compute the slices images data into svg content based on hex
