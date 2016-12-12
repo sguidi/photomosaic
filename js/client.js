@@ -10,66 +10,115 @@
     // Current status
     var status;
 
+    /**
+     * Render a mosaic of the input file
+     * @param {File} file - The input file
+     */
     function imageToMosaic(file) {
+        // New file selected, clean mosaic result container
+        clear();
+        // Set status to processing
         setStatus(STATUS_PROCESSING);
+        // Load the file into an Image
         Utils.loadImage(file).then(function (image) {
-            transform(image);
+            // Render the image mosaic
+            render(image);
         }).catch(function (e) {
-            setStatus(STATUS_ERROR);
+            // Set status to error
+            setStatus(STATUS_ERROR, e);
+            console.error(e);
         });
     }
 
-    // Transfor the image to mosaic
-    function transform(image) {
+    /**
+     * Render the mosaic of input image
+     * @param {Image} image - The input image
+    */
+    function render(image) {
         var start = performance.now();
+        var resultContainer = document.getElementById('mosaic');
 
-        //Create canvas result and append it to the DOM
+        /* Create the canvas mosaic container and append it to the DOM
+        * The canvas need to be in the DOM from the start to show user the render progress row by row 
+        */
         var canvas = document.createElement('canvas');
         canvas.width = image.width;
         canvas.height = image.height;
         var context = canvas.getContext('2d');
-        document.getElementById('mosaic').appendChild(canvas);
+        resultContainer.appendChild(canvas);
 
-        // Transform the image and append orderd rows as soon as they're ready
+        // Transform the image row by row and render each one into the canvas as soon as it's ready
         var buildRowsPromise = MosaicBuilder.transformRowByRow(image, TILE_WIDTH, TILE_HEIGHT,
             function (row) {
-                // canvas.height = row[0].height * (row[0].r + 1);
+                // Append the transformed row to the canvas
                 row.forEach(function (cell) {
-                    // var tile = new Image();
-                    // tile.src = cell.tile;
-                    if (cell.tile.complete) {
-                        // document.getElementById('mosaic').appendChild(cell.tile);
-                        context.drawImage(cell.tile, cell.x, cell.y, cell.width, cell.height);
-                    }
+                    var tileImage = Utils.getImageFromSVG(cell.tile);
+                    context.drawImage(tileImage, cell.x, cell.y, cell.width, cell.height);
                 });
-                //
             }
         );
-
+        
+        // Render completed, log execution time and update status
         buildRowsPromise.then(function () {
             console.log('mosaic completed in', ((performance.now() - start) / 1000).toFixed(3), 'sec');
             setStatus(STATUS_INITIAL);
-        }).catch(function (err) {
-            // catch any error that happened along the way
-            setStatus(STATUS_ERROR);
+        }).catch(function (e) {
+            // Set status to error
+            setStatus(STATUS_ERROR, e);
+            console.error(e);
         });
     }
 
-    // Update application status and application behave
-    function setStatus(value) {
-        status = value;
-        document.querySelector('#status').className = status;
-        document.getElementById('file-input').disabled = ([STATUS_PROCESSING, STATUS_INCOMPATIBLE].indexOf(status) >= 0);
+    /**
+     * Interrupt the running render
+    */
+    function cancel() {
+        MosaicBuilder.cancel();
+        setStatus(STATUS_INITIAL);
     }
 
-    // Initialize the application
-    function init() {
+    /**
+     * Clean the mosaic result area
+     */
+    function clear() {
+        // Remove previous resultContainer
+        var resultContainer = document.getElementById('mosaic');
+        if(resultContainer.querySelector('canvas')) {
+            resultContainer.removeChild(resultContainer.querySelector('canvas'));
+        }
+    }
 
-        // browser compatibility checks
-        if (!Utils.isCanvasSupported()) {
+    /**
+     * Update application status and change UI actions accordingly
+     * @param {string} value - The next status
+     * @param {object} errorDetails - Details for STATUS_ERROR
+     */
+    function setStatus(value, errorDetails) {
+        // Set and show the new status
+        status = value;
+        if(status === STATUS_ERROR) {
+            document.querySelector('#status .error .details').innerHTML  = errorDetails ? String(errorDetails) : '';
+        }
+        document.querySelector('#status').className = status;
+        
+        // Enable/Disable file input accordingly to current status
+        document.getElementById('file-input').disabled = STATUS_PROCESSING == status;
+    }
+
+    /**
+     * Initialize the application by:
+     * - check the browser compatibility
+     * - register drag & drop handler for file select
+     * - register input file handler for file select
+     */
+    function init() {
+        
+        // guard browser compatibility
+        if (!Utils.checkSupportedFeatures()) {
             setStatus(STATUS_INCOMPATIBLE);
             return;
         }
+
         // Avoid drag by mistake outside the drop-zone
         window.addEventListener("dragover", function (e) {
             e = e || event;
@@ -107,11 +156,15 @@
 
         fileInput.addEventListener('change', function (e) {
             e.preventDefault();
-            if (status != STATUS_INITIAL) {
+            if (status == STATUS_PROCESSING) {
                 return false;
             }
             imageToMosaic(e.target.files[0]);
         });
+
+        // Cancel render
+        var cancelEl = document.querySelector('.processing a');
+        cancelEl.onclick = cancel;
 
         // Ready to go
         setStatus(STATUS_INITIAL);

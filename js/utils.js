@@ -1,13 +1,31 @@
+/** Collection of utility functions
+ * Externalized from the client/mosaic as indentified generic enough to be reusable in other context
+ */
 var Utils = (function () {
     'use strict';
 
-    // Check Canvas support
-    function isCanvasSupported() {
+    /**
+     * Check browser support for needed feature
+     * @returns {boolean} check result
+     */
+    function checkSupportedFeatures() {
+        var supported = true;
+        // Promise
+        supported = supported && (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
+        // Web Workers
+        supported = supported && (typeof Worker !== "undefined" && Worker.toString().indexOf("[native code]") !== -1);
+        // Canvas
         var elem = document.createElement('canvas');
-        return !!(elem.getContext && elem.getContext('2d'));
+        supported = supported && !!(elem.getContext && elem.getContext('2d'));
+
+        return supported;
     }
 
-    // Return a Promise to async load the file into an Image obj 
+    /**
+     * Async load of an Image from a File
+     * @param {File} file - The input file
+     * @returns {Promise} - Resolve with loaded Image of reject with error
+    */
     function loadImage(file) {
         return new Promise(function (resolve, reject) {
             // Guard file MIME type
@@ -35,7 +53,45 @@ var Utils = (function () {
         });
     }
 
-    function imageHex(image) {
+    /**
+     * Slice an Image rows and columns into a matrix of tiles with coordinates
+     * Right and bottom oddment are ignored
+     * @param {Image} image - The image to transform
+     * @param {number} tileW - The tile width size
+     * @param {number} tileH - The tile heigth size
+     * @returns {Array} - The matrix of rows/columns tiles
+     */
+    function sliceImage(image, tileW, tileH) {
+        var canvas = document.createElement('canvas');
+        canvas.width = tileW;
+        canvas.height = tileH;
+        var context = canvas.getContext('2d');
+        var slices = [];
+        var rows = Math.floor(image.height / tileH);
+        var cols = Math.floor(image.width / tileW);
+        var tileData;
+        for (var r = 0; r < rows; r++) {
+            slices.push([]);
+            for (var c = 0; c < cols; c++) {
+                context.drawImage(image, tileW * c, tileH * r, tileW, tileH, 0, 0, tileW, tileH);
+                slices[r].push({
+                    data: context.getImageData(0, 0, tileW, tileH),
+                    x: c * tileW,
+                    y: r * tileH,
+                    width: tileW,
+                    height: tileH
+                });
+            }
+        }
+        return slices;
+    }
+
+    /**
+     * Compute the average color of an Image
+     * @param {Image} image - subject of average color computation
+     * @param {string} - the hex color 6digits without the initial #
+     */
+    function imageAverageHex(image) {
         var length = image.data.length,
             blockSize = 5, // only visit every 5 pixels
             i = -4,
@@ -58,33 +114,7 @@ var Utils = (function () {
         return hex;
     }
 
-    function sliceImage(image, tileW, tileH) {
-        var canvas = document.createElement('canvas');
-        canvas.width = tileW;
-        canvas.height = tileH;
-        var context = canvas.getContext('2d');
-        var slices = [];
-        var rows = Math.floor(image.height / tileH);
-        var cols = Math.floor(image.width / tileW);
-        var tileData;
-        for (var r = 0; r < rows; r++) {
-            slices.push([]);
-            for (var c = 0; c < cols; c++) {
-                context.drawImage(image, tileW * c, tileH * r, tileW, tileH, 0, 0, tileW, tileH);
-                slices[r].push({
-                    data: context.getImageData(0, 0, tileW, tileH),
-                    r: r,
-                    c: c,
-                    x: c * tileW,
-                    y: r * tileH,
-                    width: tileW,
-                    height: tileH
-                });
-            }
-        }
-        return slices;
-    }
-
+    
     function loadTile(hex) {
         return new Promise(function (resolve, reject) {
             var tileImg = new Image();
@@ -95,6 +125,11 @@ var Utils = (function () {
         });
     }
 
+    /**
+     * Async load of a tile content from server url 'color/<hex>'
+     * @param {string} hex - the hex color in 6-digits format
+     * @return {Promise} - Resolve into the loaded content
+     */
     function loadTileAjax(hex) {
         return new Promise(function (resolve, reject) {
             var xhr = new XMLHttpRequest();
@@ -106,13 +141,24 @@ var Utils = (function () {
         });
     }
 
+    /**
+     * Create an Image from an SVG in text format
+     * @param {string} svgText - the svg content
+     * @returns {Image} image build using the input svg content
+     */
+    function getImageFromSVG(svgText) {
+        var result = new Image();
+        result.src = 'data:image/svg+xml;base64,'+window.btoa(svgText);
+        return result;
+    }
+
     return {
-        isCanvasSupported: isCanvasSupported,
+        checkSupportedFeatures: checkSupportedFeatures,
         loadImage: loadImage,
-        imageHex: imageHex,
         sliceImage: sliceImage,
-        loadTile: loadTile,
-        loadTileAjax: loadTileAjax
+        imageAverageHex: imageAverageHex,
+        loadTileAjax: loadTileAjax,
+        getImageFromSVG: getImageFromSVG
     };
 
 })();

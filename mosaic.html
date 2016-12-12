@@ -5,17 +5,17 @@
 	<script type="text/javascript" src="js/mosaic.js"></script>
 	<script type="text/javascript" src="js/client.js"></script>
 	<script type="text/javascript" src="js/utils.js"></script>
-	<script type="text/javascript" src="js/mosaic-builder.js"></script>
 	<script type="text/javascript" src="js/pool.js"></script>
+	<script type="text/javascript" src="js/mosaic-builder.js"></script>
 	<link rel="stylesheet" type="text/css" href="css/mosaic.css">
-	<title>Mosaic</title>
 	<meta name="description" content="Transform your photo in a mosaic">
 	<meta name="author" content="Sergio Guidi">
+	<title>Mosaic</title>	
 </head>
 
 <body>
 
-	<h1 align="center">Transform your photo in a mosaic</h1>
+	<h1>Transform your photo in a mosaic</h1>
 
 	<div class="box input" id="drop-zone">
 		<p>Drop your photo here!</p>
@@ -27,21 +27,27 @@
 		<div id="status">				
 			<!-- Contains current status -->
 			<p class="initial">Ready to process your photo!</p>
-			<p class="processing">We're processing your photo...</p>
+			<p class="processing">We're processing your photo...
+				<a href="#">Too slow, I'm out!</a>
+			</p>
 			<p class="incompatible">
 				Your browser doesn't support Canvas, see how to
 				<a href="http://browsehappy.com/" target="_blank">update</a>
 			</p>
-			<p class="error">Sorry something went wrong!</p>
+			<p class="error">
+				Sorry something went wrong!
+				<span class="details"></span>
+			</p>
 		</div>
 	</div>
 
-	<div class="box result">
-		<p>Result here!</p>
+	<h1>Result</h1>
+	<div class="box">
 		<div id="mosaic">
-			<!-- Computed photo mosaic here -->
+		<!-- Computed photo mosaic here -->
 		</div>
 	</div>
+	
 
 </body>
 
